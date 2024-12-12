@@ -6,9 +6,24 @@ A Discord bot that manages service status notifications through webhooks. The bo
 You can use our hosted version of the bot:
 1. [Invite the bot to your server](https://discord.com/oauth2/authorize?client_id=1316555696430387301)
 2. Navigate to the category where you want status notifications to appear
-3. Use `/addservice <service_name>` to set up your first service
-4. Configure your status page to send notifications to the provided webhook URL
+3. Choose one of these methods to set up services:
+   
+   **Option 1: Quick Setup (Recommended)**
+   - Use `/setup [category_name]` to automatically create a category with channels for all available services
+   - This will set up all services at once in a new category
+   
+   **Option 2: Manual Setup**
+   - Use `/addservice <service_name>` for each service you want to add
+   - Available services:
+     - `openai` - OpenAI Status Updates
+     - `github` - GitHub Status Updates
+     - `discord` - Discord Status Updates
+   - Example: `/addservice github` to add GitHub status notifications
+
+4. Configure your status page to send notifications to the provided webhook URL (if you're adding your own service)
 5. Done! You'll now receive status updates in your Discord server
+
+Want to add a new service? Use `/servicerequest` to request additional services to be added to the bot.
 
 ## Project Structure
 ```
