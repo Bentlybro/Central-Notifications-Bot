@@ -44,7 +44,32 @@ class NotificationBot(commands.Bot):
         print('------')
         
     async def on_guild_join(self, guild):
+        # Update bot status
         await self.update_status()
+        
+        # Send notification to designated channel
+        notification_channel = self.get_channel(1316890394415599706)
+        if notification_channel:
+            embed = discord.Embed(
+                title="🎉 New Server Joined",
+                description=f"Bot has been added to a new server!",
+                color=discord.Color.green(),
+                timestamp=discord.utils.utcnow()
+            )
+            
+            embed.add_field(
+                name="Server Info",
+                value=f"**Name:** {guild.name}\n**ID:** {guild.id}\n**Members:** {guild.member_count}",
+                inline=False
+            )
+            
+            embed.add_field(
+                name="Owner",
+                value=f"{guild.owner} (ID: {guild.owner_id})",
+                inline=False
+            )
+            
+            await notification_channel.send(embed=embed)
         
     async def on_guild_remove(self, guild):
         await self.update_status() 
