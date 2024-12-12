@@ -46,7 +46,9 @@ python main.py
 5. Repeat for any additional services you want to monitor
 
 ## Commands
-- `/addservice <service_name>` - Generate a new webhook URL for a service and create a dedicated channel
+- `/addservice <service_name>` - Add a service webhook to your server
+    - If the service exists: Adds it to your server
+    - If the service is new: Only the bot owner can create it
     - Creates a new channel in the same category as the command (e.g., "openai-status")
     - Reuses existing channels if they have the same name
     - Can be used across multiple servers for the same service

@@ -5,6 +5,8 @@ import os
 import sqlite3
 from typing import Optional
 
+OWNER_ID = int(os.getenv("OWNER_ID", "353922987235213313"))
+
 class NotificationBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
@@ -50,7 +52,7 @@ class ServiceCommands(commands.Cog):
                 )
             """)
 
-    @app_commands.command(name="addservice", description="Add a new service webhook")
+    @app_commands.command(name="addservice", description="Add a service webhook to your server")
     async def add_service(self, interaction: discord.Interaction, service_name: str):
         webhook_path = f"/webhook/{service_name.lower().replace(' ', '_')}"
         webhook_url = f"{os.getenv('WEBHOOK_BASE_URL')}{webhook_path}"
@@ -70,6 +72,14 @@ class ServiceCommands(commands.Cog):
                 if service:
                     service_id = service[0]
                 else:
+                    # Only bot owner can create new services
+                    if interaction.user.id != OWNER_ID:
+                        await interaction.response.send_message(
+                            f"Service '{service_name}' doesn't exist yet. Please contact the bot owner to add new services.",
+                            ephemeral=True
+                        )
+                        return
+                        
                     # Create new service if it doesn't exist
                     cursor = conn.execute(
                         "INSERT INTO services (name, webhook_path) VALUES (?, ?)",
@@ -112,7 +122,7 @@ class ServiceCommands(commands.Cog):
                 if service:
                     embed.add_field(
                         name="Note",
-                        value="This service already exists. Notifications will now be sent to this server as well.",
+                        value="Using existing service. Notifications will now be sent to this server.",
                         inline=False
                     )
                 
@@ -137,50 +147,160 @@ class ServiceCommands(commands.Cog):
                 ephemeral=True
             )
 
-    @app_commands.command(name="removeservice", description="Remove a service webhook")
+    @app_commands.command(name="removeservice", description="Remove a service from your server")
     async def remove_service(self, interaction: discord.Interaction, service_name: str):
-        with sqlite3.connect(self.db_path) as conn:
-            # First check if the service exists
-            service = conn.execute(
-                "SELECT webhook_path FROM services WHERE name = ?",
-                (service_name,)
-            ).fetchone()
-            
-            if not service:
-                await interaction.response.send_message(
-                    f"Service '{service_name}' not found!",
-                    ephemeral=True
-                )
-                return
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # First check if the service exists
+                service = conn.execute(
+                    "SELECT id FROM services WHERE name = ?",
+                    (service_name,)
+                ).fetchone()
                 
-            # Delete the service
-            conn.execute("DELETE FROM services WHERE name = ?", (service_name,))
-            
-            embed = discord.Embed(
-                title="Service Removed Successfully",
-                description=f"Service '{service_name}' has been removed. The webhook URL will no longer accept notifications.",
-                color=discord.Color.red()
+                if not service:
+                    await interaction.response.send_message(
+                        f"Service '{service_name}' not found!",
+                        ephemeral=True
+                    )
+                    return
+                    
+                # Remove the server-specific channel mapping
+                conn.execute("""
+                    DELETE FROM server_channels 
+                    WHERE service_id = ? AND guild_id = ?
+                """, (service[0], interaction.guild_id))
+                
+                # Try to find and delete the channel
+                channel_name = f"{service_name.lower().replace(' ', '-')}-status"
+                for channel in interaction.guild.channels:
+                    if channel.name == channel_name:
+                        await channel.delete()
+                        break
+                
+                embed = discord.Embed(
+                    title="Service Removed from Server",
+                    description=f"Service '{service_name}' has been removed from this server. The channel has been deleted and you will no longer receive notifications.",
+                    color=discord.Color.orange()
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            await interaction.response.send_message(
+                "An error occurred while removing the service.",
+                ephemeral=True
             )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "I don't have permission to delete channels!",
+                ephemeral=True
+            )
+
+    @app_commands.command(name="deleteservice", description="[Owner Only] Completely delete a service")
+    async def delete_service(self, interaction: discord.Interaction, service_name: str):
+        # Check if the user is the bot owner
+        if interaction.user.id != OWNER_ID:
+            await interaction.response.send_message(
+                "Only the bot owner can delete services completely.",
+                ephemeral=True
+            )
+            return
+
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # First check if the service exists
+                service = conn.execute(
+                    "SELECT id FROM services WHERE name = ?",
+                    (service_name,)
+                ).fetchone()
+                
+                if not service:
+                    await interaction.response.send_message(
+                        f"Service '{service_name}' not found!",
+                        ephemeral=True
+                    )
+                    return
+                
+                # Get all servers using this service
+                channels = conn.execute("""
+                    SELECT guild_id, channel_id FROM server_channels
+                    WHERE service_id = ?
+                """, (service[0],)).fetchall()
+                
+                # Delete the service and all its channel mappings
+                conn.execute("DELETE FROM server_channels WHERE service_id = ?", (service[0],))
+                conn.execute("DELETE FROM services WHERE id = ?", (service[0],))
+                
+                # Notify and delete channels in all servers
+                deleted_count = 0
+                for guild_id, channel_id in channels:
+                    guild = self.bot.get_guild(guild_id)
+                    if guild:
+                        channel = guild.get_channel(channel_id)
+                        if channel:
+                            try:
+                                # Send notification message
+                                await channel.send(
+                                    f"The service '{service_name}' has been removed. This channel needs to be deleted."
+                                )
+                                deleted_count += 1
+                            except discord.Forbidden:
+                                continue
+                
+                embed = discord.Embed(
+                    title="Service Deleted",
+                    description=f"Service '{service_name}' has been completely deleted. The webhook URL will no longer accept notifications.",
+                    color=discord.Color.red()
+                )
+                embed.add_field(
+                    name="Cleanup",
+                    value=f"Deleted {deleted_count} channels across {len(channels)} servers.",
+                    inline=False
+                )
+                await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            await interaction.response.send_message(
+                "An error occurred while deleting the service.",
+                ephemeral=True
+            )
 
     @app_commands.command(name="listservices", description="List all registered services")
     async def list_services(self, interaction: discord.Interaction):
+        # Check if the user is the bot owner
+        if interaction.user.id != OWNER_ID:
+            await interaction.response.send_message(
+                "Only the bot owner can list all services.",
+                ephemeral=True
+            )
+            return
+
         with sqlite3.connect(self.db_path) as conn:
-            services = conn.execute("SELECT name, webhook_path FROM services").fetchall()
+            services = conn.execute("""
+                SELECT s.name, s.webhook_path, COUNT(sc.channel_id) as server_count
+                FROM services s
+                LEFT JOIN server_channels sc ON s.id = sc.service_id
+                GROUP BY s.id
+            """).fetchall()
         
         if not services:
-            await interaction.response.send_message("No services registered yet!", ephemeral=True)
+            await interaction.response.send_message(
+                "No services registered yet.",
+                ephemeral=True
+            )
             return
-            
+        
         embed = discord.Embed(
             title="Registered Services",
             color=discord.Color.blue()
         )
         
-        for name, path in services:
-            webhook_url = f"{os.getenv('WEBHOOK_BASE_URL')}{path}"
-            embed.add_field(name=name, value=webhook_url, inline=False)
-            
+        for name, webhook_path, server_count in services:
+            webhook_url = f"{os.getenv('WEBHOOK_BASE_URL')}{webhook_path}"
+            value = f"Webhook: {webhook_url}\nActive in {server_count} servers"
+            embed.add_field(name=name, value=value, inline=False)
+        
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(name="setchannel", description="Set the notification channel for a service")
