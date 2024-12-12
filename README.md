@@ -32,7 +32,16 @@ PORT=8000
 python main.py
 ```
 
-## Usage
+## Getting Started
+1. Invite the bot to your Discord server using the bot's invite link
+2. Navigate to the category where you want status notifications to appear
+3. Use `/addservice <service_name>` to set up your first service
+    - This will create a new channel (or use an existing one) for the service
+    - You'll receive a webhook URL to use with your status page
+4. Configure your status page to send notifications to the provided webhook URL
+5. Repeat for any additional services you want to monitor
+
+## Commands
 - `/addservice <service_name>` - Generate a new webhook URL for a service and create a dedicated channel
     - Creates a new channel in the same category as the command (e.g., "openai-status")
     - Reuses existing channels if they have the same name
