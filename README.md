@@ -20,8 +20,7 @@ You can use our hosted version of the bot:
      - `discord` - Discord Status Updates
    - Example: `/addservice github` to add GitHub status notifications
 
-4. Configure your status page to send notifications to the provided webhook URL (if you're adding your own service)
-5. Done! You'll now receive status updates in your Discord server
+4. Done! You'll now receive status updates in your Discord server
 
 Want to add a new service? Use `/servicerequest` to request additional services to be added to the bot.
 
@@ -70,12 +69,7 @@ PORT=8000
 OWNER_ID=your_discord_user_id  # Required for owner-only commands
 ```
 
-4. Set up the database:
-- The bot will automatically create a SQLite database at `config/services.db`
-- The database schema includes tables for services and server channels
-- No manual setup required
-
-5. Run the bot:
+4. Run the bot:
 ```bash
 python main.py
 ```
