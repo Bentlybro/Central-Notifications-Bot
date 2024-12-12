@@ -30,9 +30,6 @@ async def main():
     webhook_thread.daemon = True
     webhook_thread.start()
 
-    # Load bot extensions
-    await bot.load_extension("src.bot.bot")
-
     # Start the bot
     async with bot:
         await bot.start(os.getenv("DISCORD_TOKEN"))
