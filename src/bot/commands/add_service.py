@@ -41,6 +41,9 @@ class AddServiceCog(BaseServiceCog):
                         (service_name, webhook_path)
                     )
                     service_id = cursor.lastrowid
+                    
+                    # Update bot status to reflect new service count
+                    await self.bot.update_status()
                 
                 # Try to find existing channel with the same name in the category
                 existing_channel = None

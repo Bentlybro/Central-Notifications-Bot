@@ -42,6 +42,9 @@ class DeleteServiceCog(BaseServiceCog):
                 conn.execute("DELETE FROM server_channels WHERE service_id = ?", (service[0],))
                 conn.execute("DELETE FROM services WHERE id = ?", (service[0],))
                 
+                # Update bot status to reflect the removed service
+                await self.bot.update_status()
+                
                 # Notify and delete channels in all servers
                 deleted_count = 0
                 for guild_id, channel_id in channels:
