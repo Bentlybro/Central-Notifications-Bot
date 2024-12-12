@@ -10,9 +10,32 @@ You can use our hosted version of the bot:
 4. Configure your status page to send notifications to the provided webhook URL
 5. Done! You'll now receive status updates in your Discord server
 
-## Self-Hosting
-If you prefer to host the bot yourself, follow these setup instructions:
+## Project Structure
+```
+Central-Notifications-Bot/
+├── src/
+│   ├── bot/
+│   │   ├── commands/
+│   │   │   ├── __init__.py
+│   │   │   ├── base_cog.py        # Base cog with shared functionality
+│   │   │   ├── add_service.py     # Add service command
+│   │   │   ├── remove_service.py  # Remove service command
+│   │   │   ├── delete_service.py  # Delete service command
+│   │   │   ├── list_services.py   # List services command
+│   │   │   ├── help.py           # Help command
+│   │   │   ├── about.py          # About command
+│   │   │   ├── service_request.py # Service request command
+│   │   │   └── setup.py          # Setup command
+│   │   └── bot.py                # Main bot class
+│   └── webhook/
+│       └── server.py             # FastAPI webhook server
+├── main.py                       # Entry point
+├── requirements.txt              # Python dependencies
+├── .env                         # Environment variables
+└── README.md                    # This file
+```
 
+## Self-Hosting Setup
 1. Clone the repository:
 ```bash
 git clone https://github.com/Bentlybro/Central-Notifications-Bot.git
@@ -25,36 +48,42 @@ pip install -r requirements.txt
 ```
 
 3. Create a `.env` file with the following variables:
-```
+```env
 DISCORD_TOKEN=your_discord_bot_token
 WEBHOOK_BASE_URL=your_public_webhook_url (e.g. https://your-domain.com - no trailing slash or api path at the end)
 PORT=8000
+OWNER_ID=your_discord_user_id  # Required for owner-only commands
 ```
 
-4. Run the bot:
+4. Set up the database:
+- The bot will automatically create a SQLite database at `config/services.db`
+- The database schema includes tables for services and server channels
+- No manual setup required
+
+5. Run the bot:
 ```bash
 python main.py
 ```
 
-## Getting Started
-1. Invite the bot to your Discord server using the bot's invite link
-2. Navigate to the category where you want status notifications to appear
-3. Use `/addservice <service_name>` to set up your first service
-    - This will create a new channel (or use an existing one) for the service
-    - You'll receive a webhook URL to use with your status page
-4. Configure your status page to send notifications to the provided webhook URL
-5. Repeat for any additional services you want to monitor
+The bot will:
+- Initialize the database
+- Start the FastAPI webhook server
+- Connect to Discord
+- Load all command cogs
+- Begin listening for commands and webhooks
 
 ## Commands
-- `/addservice <service_name>` - Add a service webhook to your server
-    - If the service exists: Adds it to your server
-    - If the service is new: Only the bot owner can create it
-    - Creates a new channel in the same category as the command (e.g., "openai-status")
-    - Reuses existing channels if they have the same name
-    - Can be used across multiple servers for the same service
+### User Commands
+- `/addservice <service_name>` - Add an existing service to your server
+- `/removeservice <service_name>` - Remove a service from your server
+- `/help` - Display help information
+- `/about` - Learn about the bot
+- `/setup [category_name]` - Create a new category with channels for all services
+
+### Owner Commands
+- `/addservice <service_name>` - Create a new service (when it doesn't exist)
+- `/deleteservice <service_name>` - Completely delete a service
 - `/listservices` - List all registered services
-- `/removeservice <service_name>` - Remove a service
-- `/setchannel <service_name> <channel>` - To manually set the notification channel for a service
 
 ## Features
 - Create unique webhook URLs for different services
@@ -87,6 +116,13 @@ Each notification is formatted into a clear Discord embed with:
 - Color coding based on severity
 - Detailed updates and descriptions
 - Timestamps for each event
+
+## Development
+To add new features or modify existing ones:
+1. Commands are organized in separate files in `src/bot/commands/`
+2. Each command extends the `BaseServiceCog` class
+3. Database operations are handled through the base cog
+4. Webhook handling is in `src/webhook/server.py`
 
 ## Screenshots 
 Here are some screenshots to show how the messages look
