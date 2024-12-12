@@ -328,5 +328,101 @@ class ServiceCommands(commands.Cog):
             ephemeral=True
         )
 
+    @app_commands.command(name="help", description="Learn how to use the bot and manage services")
+    async def help_command(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="📚 Notification Bot Help",
+            description="A bot to manage service notifications across Discord servers.",
+            color=discord.Color.blue()
+        )
+        
+        # Regular User Commands
+        embed.add_field(
+            name="🔧 Regular User Commands",
+            value=(
+                "**`/addservice <service_name>`**\n"
+                "➜ Add an existing service to your server\n"
+                "➜ Creates a dedicated channel for notifications\n"
+                "➜ Uses existing channel if one with matching name exists\n\n"
+                "**`/removeservice <service_name>`**\n"
+                "➜ Remove a service from your server\n"
+                "➜ Deletes the associated notification channel\n"
+                "➜ Stops all notifications for that service\n\n"
+                "**`/about`**\n"
+                "➜ Learn about the bot and its creator\n\n"
+                "**`/help`**\n"
+                "➜ Display this help message"
+            ),
+            inline=False
+        )
+        
+        # Owner Only Commands
+        embed.add_field(
+            name="👑 Owner Only Commands",
+            value=(
+                "**`/addservice <service_name>`**\n"
+                "➜ Create a new service (when service doesn't exist)\n"
+                "➜ Generates a unique webhook URL\n\n"
+            ),
+            inline=False
+        )
+        
+        # Additional Information
+        embed.add_field(
+            name="ℹ️ Additional Information",
+            value=(
+                "• Services are managed globally by the bot owner\n"
+                "• Each server can subscribe to existing services\n"
+                "• Channels are automatically created in the same category as the command\n"
+                "• Webhook URLs are unique and permanent until service deletion"
+            ),
+            inline=False
+        )
+
+        embed.set_footer(
+            text=f"Bot Owner: @bentlybro • Use these commands in any channel where the bot has access"
+        )
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="about", description="Learn about the bot and its creator")
+    async def about_command(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="📢 Central Notifications Bot",
+            description=(
+                "A powerful Discord bot that manages service status notifications through webhooks. "
+                "Perfect for monitoring status pages and receiving real-time updates across multiple Discord servers."
+            ),
+            color=discord.Color.blue()
+        )
+        
+        embed.add_field(
+            name="🔑 Key Features",
+            value=(
+                "• Centralized service status monitoring\n"
+                "• Support for multiple Discord servers\n"
+                "• Automatic channel management\n"
+                "• Statuspage.io webhook integration\n"
+                "• Real-time status updates and incidents"
+            ),
+            inline=False
+        )
+        
+        embed.add_field(
+            name="🛠️ Created By",
+            value="This bot was created by @bentlybro",
+            inline=False
+        )
+        
+        embed.add_field(
+            name="📚 Need Help?",
+            value="Use `/help` to see all available commands",
+            inline=False
+        )
+        
+        embed.set_footer(text="Made with ❤️ for the Discord community")
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
 async def setup(bot: NotificationBot):
     await bot.add_cog(ServiceCommands(bot)) 
