@@ -13,22 +13,46 @@ You can use our hosted version of the bot:
 ## Self-Hosting
 If you prefer to host the bot yourself, follow these setup instructions:
 
-1. Install dependencies:
+1. Clone the repository:
+```bash
+git clone https://github.com/Bentlybro/Central-Notifications-Bot.git
+cd Central-Notifications-Bot
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Create a `.env` file with the following variables:
+3. Create a `.env` file with the following variables:
 ```
 DISCORD_TOKEN=your_discord_bot_token
 WEBHOOK_BASE_URL=your_public_webhook_url (e.g. https://your-domain.com - no trailing slash or api path at the end)
 PORT=8000
 ```
 
-3. Run the bot:
+4. Run the bot:
 ```bash
 python main.py
 ```
+
+## Getting Started
+1. Invite the bot to your Discord server using the bot's invite link
+2. Navigate to the category where you want status notifications to appear
+3. Use `/addservice <service_name>` to set up your first service
+    - This will create a new channel (or use an existing one) for the service
+    - You'll receive a webhook URL to use with your status page
+4. Configure your status page to send notifications to the provided webhook URL
+5. Repeat for any additional services you want to monitor
+
+## Commands
+- `/addservice <service_name>` - Generate a new webhook URL for a service and create a dedicated channel
+    - Creates a new channel in the same category as the command (e.g., "openai-status")
+    - Reuses existing channels if they have the same name
+    - Can be used across multiple servers for the same service
+- `/listservices` - List all registered services
+- `/removeservice <service_name>` - Remove a service
+- `/setchannel <service_name> <channel>` - To manually set the notification channel for a service
 
 ## Features
 - Create unique webhook URLs for different services
@@ -41,15 +65,6 @@ python main.py
     - Incident updates and monitoring
     - System status changes
 - Easy service management through Discord commands
-
-## Commands
-- `/addservice <service_name>` - Generate a new webhook URL for a service and create a dedicated channel
-    - Creates a new channel in the same category as the command (e.g., "openai-status")
-    - Reuses existing channels if they have the same name
-    - Can be used across multiple servers for the same service
-- `/listservices` - List all registered services
-- `/removeservice <service_name>` - Remove a service
-- `/setchannel <service_name> <channel>` - To manually set the notification channel for a service
 
 ## Multi-Server Support
 The bot can be added to multiple Discord servers and will:
