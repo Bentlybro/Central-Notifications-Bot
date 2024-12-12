@@ -70,3 +70,10 @@ Each notification is formatted into a clear Discord embed with:
 - Color coding based on severity
 - Detailed updates and descriptions
 - Timestamps for each event
+
+## Screenshots 
+Here are some screenshots to show how the messages look
+![image](https://github.com/user-attachments/assets/e4e27608-5961-4b50-8904-0ab9d8db45c6)
+![image](https://github.com/user-attachments/assets/8d681652-2b08-43f8-9e02-d59add6963c1)
+
+
